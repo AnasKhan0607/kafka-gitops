@@ -1,0 +1,29 @@
+apiVersion: kafka.jikkou.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: test-topic-1
+spec:
+  partitions: 3
+  replicas: 2
+  configs:
+    min.insync.replicas: 2
+---
+apiVersion: kafka.jikkou.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: test-topic-2
+spec:
+  partitions: 3
+  replicas: 2
+  configs:
+    min.insync.replicas: 2
+---
+apiVersion: kafka.jikkou.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: test-topic-3
+spec:
+  partitions: 3
+  replicas: 2
+  configs:
+    min.insync.replicas: 2
