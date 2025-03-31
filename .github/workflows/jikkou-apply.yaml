@@ -1,18 +1,67 @@
-name: Apply Jikkou Topics and ACLs
+name: Jikkou Topics and ACLs
 
 on:
   push:
     branches: [main]
     paths:
       - 'topics/**'
+  pull_request:
+    paths:
+      - 'topics/**'
 
 jobs:
-  jikkou:
+  diff:
+    name: Jikkou Diff (PR Comment)
     runs-on: self-hosted
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run Jikkou
+      - name: Run Jikkou Diff
+        run: |
+          jikkou diff --files topics/*.yaml > jikkou-diff.txt || echo "Diff failed or nothing to show" > jikkou-diff.txt
+
+      - name: Comment PR with Diff
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const diff = fs.readFileSync('jikkou-diff.txt', 'utf8');
+            const body = `### 🔍 Jikkou Diff Preview\n\`\`\`diff\n${diff}\n\`\`\``;
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.data.find(c => c.user.login === 'github-actions[bot]' && c.body.includes('### 🔍 Jikkou Diff Preview'));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
+
+  apply:
+    name: Jikkou Apply (Only on main)
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Jikkou Apply
         run: |
           jikkou apply --files topics/*.yaml
