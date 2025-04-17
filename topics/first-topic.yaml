@@ -13,7 +13,7 @@ kind: KafkaTopic
 metadata:
   name: test-topic-2
 spec:
-  partitions: 4
+  partitions: 3
   replicas: 2
   configs:
     min.insync.replicas: 2
